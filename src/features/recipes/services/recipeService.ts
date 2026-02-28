@@ -9,9 +9,19 @@ export const getRecipes = async (
   search: string,
   page: number = 0,
   size: number = 5,
+  sortBy?: string,
+  direction?: "asc" | "desc",
 ): Promise<PaginatedRecipesResponse> => {
+  const params = new URLSearchParams();
+  params.set("search", search);
+  params.set("page", String(page));
+  params.set("size", String(size));
+
+  if (sortBy) params.set("sortBy", sortBy);
+  if (direction) params.set("direction", direction);
+
   const { data } = await api.get<PaginatedRecipesResponse>(
-    `/recipe?search=${search}&page=${page}&size=${size}`,
+    `/recipe?${params.toString()}`,
   );
   return data;
 };
