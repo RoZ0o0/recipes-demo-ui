@@ -1,12 +1,26 @@
-import { Card, CardContent, Grid, Chip, Typography, Box } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Grid,
+  Chip,
+  Typography,
+  Box,
+  IconButton,
+} from "@mui/material";
+import EditIcon from "../../../../components/icons/EditIcon";
 import type { RecipeResponse } from "../../../../types/Recipe";
 
 interface RecipeCardGridProps {
   recipes: RecipeResponse[];
   onPreview?: (recipe: RecipeResponse) => void;
+  onEdit?: (recipe: RecipeResponse) => void;
 }
 
-const RecipeCardGrid = ({ recipes, onPreview }: RecipeCardGridProps) => {
+const RecipeCardGrid = ({
+  recipes,
+  onPreview,
+  onEdit,
+}: RecipeCardGridProps) => {
   const chipColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "easy":
@@ -23,20 +37,31 @@ const RecipeCardGrid = ({ recipes, onPreview }: RecipeCardGridProps) => {
   return (
     <Grid container spacing={4} justifyContent="center">
       {recipes.map((recipe: RecipeResponse) => (
-        <Grid
-          sx={{ xs: 12, sm: 6, md: 4 }}
-          key={recipe.id}
-          onClick={() => onPreview && onPreview(recipe)}
-        >
+        <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={recipe.id}>
           <Card
             sx={{
               height: 240,
               width: 360,
               display: "flex",
               flexDirection: "column",
+              position: "relative",
+              cursor: onPreview ? "pointer" : undefined,
             }}
             elevation={3}
+            onClick={() => onPreview && onPreview(recipe)}
           >
+            {onEdit && (
+              <IconButton
+                size="small"
+                sx={{ position: "absolute", top: 4, right: 4, zIndex: 1 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(recipe);
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            )}
             <CardContent
               sx={{ display: "flex", flexDirection: "column", height: "100%" }}
             >

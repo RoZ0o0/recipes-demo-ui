@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BaseDialog from "../../../../components/BaseDialog";
 import {
   Box,
@@ -9,16 +9,25 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type { ReactNode } from "react";
-import type { IngredientRequest } from "../../../../types/Ingredient";
-import type { RecipeRequest } from "../../../../types/Recipe";
 import { useCreateRecipe } from "../../hooks/useCreateRecipe";
+import { useUpdateRecipe } from "../../hooks/useUpdateRecipe";
+import type { ReactNode } from "react";
+import type {
+  IngredientRequest,
+  IngredientUnit,
+} from "../../../../types/Ingredient";
+import type {
+  RecipeRequest,
+  RecipeDifficulty,
+  RecipeResponse,
+} from "../../../../types/Recipe";
 
 interface RecipeFormDialogProps {
   open: boolean;
   onClose: () => void;
   title?: string;
   actions?: ReactNode;
+  recipe?: RecipeResponse | null;
 }
 
 const defaultIngredient = (): IngredientRequest => ({
@@ -27,28 +36,64 @@ const defaultIngredient = (): IngredientRequest => ({
   unit: "G",
 });
 
-const units = ["G", "KG", "ML", "CUP", "TBSP", "TSP", "PIECE"] as const;
-const difficulties = ["EASY", "MEDIUM", "HARD"] as const;
+const units: IngredientUnit[] = [
+  "G",
+  "KG",
+  "ML",
+  "CUP",
+  "TBSP",
+  "TSP",
+  "PIECE",
+];
+const difficulties: RecipeDifficulty[] = ["EASY", "MEDIUM", "HARD"];
 
-const RecipeFormDialog = ({ open, onClose, title }: RecipeFormDialogProps) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [preparationTime, setPreparationTime] = useState<number>(0);
-  const [difficulty, setDifficulty] =
-    useState<(typeof difficulties)[number]>("EASY");
-  const [ingredients, setIngredients] = useState<IngredientRequest[]>([
-    defaultIngredient(),
-  ]);
+export type FormData = Omit<RecipeRequest, "ingredients"> & {
+  ingredients: IngredientRequest[];
+};
+
+const initialForm: FormData = {
+  name: "",
+  description: "",
+  preparationTime: 0,
+  difficulty: "EASY",
+  ingredients: [defaultIngredient()],
+};
+
+const RecipeFormDialog = ({
+  open,
+  onClose,
+  title,
+  recipe,
+}: RecipeFormDialogProps) => {
+  const [form, setForm] = useState<FormData>(initialForm);
 
   const createMutation = useCreateRecipe();
+  const updateMutation = useUpdateRecipe();
 
   const resetForm = () => {
-    setName("");
-    setDescription("");
-    setPreparationTime(0);
-    setDifficulty("EASY");
-    setIngredients([defaultIngredient()]);
+    setForm(initialForm);
   };
+
+  useEffect(() => {
+    if (open) {
+      if (recipe) {
+        setForm({
+          name: recipe.name,
+          description: recipe.description,
+          preparationTime: recipe.preparationTime,
+          difficulty: recipe.difficulty,
+          ingredients: recipe.ingredients.map((ing) => ({
+            id: ing.id,
+            name: ing.name,
+            quantity: ing.quantity,
+            unit: ing.unit,
+          })),
+        });
+      }
+    } else {
+      resetForm();
+    }
+  }, [open, recipe]);
 
   const handleClose = () => {
     resetForm();
@@ -56,27 +101,39 @@ const RecipeFormDialog = ({ open, onClose, title }: RecipeFormDialogProps) => {
   };
 
   const addIngredient = () =>
-    setIngredients((s) => [...s, defaultIngredient()]);
+    setForm((f) => ({
+      ...f,
+      ingredients: [...f.ingredients, defaultIngredient()],
+    }));
+
   const removeIngredient = (idx: number) =>
-    setIngredients((s) => s.filter((_, i) => i !== idx));
+    setForm((f) => ({
+      ...f,
+      ingredients: f.ingredients.filter((_, i) => i !== idx),
+    }));
+
   const updateIngredient = (
     idx: number,
     field: keyof IngredientRequest,
     value: string | number,
   ) => {
-    setIngredients((s) =>
-      s.map((ing, i) => (i === idx ? { ...ing, [field]: value } : ing)),
-    );
+    setForm((f) => ({
+      ...f,
+      ingredients: f.ingredients.map((ing, i) =>
+        i === idx ? { ...ing, [field]: value } : ing,
+      ),
+    }));
   };
 
   const handleSubmit = async () => {
-    if (!name.trim()) return alert("Name is required");
+    if (!form.name.trim()) return alert("Name is required");
     const payload: RecipeRequest = {
-      name,
-      description,
-      difficulty: difficulty as RecipeRequest["difficulty"],
-      preparationTime,
-      ingredients: ingredients.map((ing) => ({
+      name: form.name,
+      description: form.description,
+      difficulty: form.difficulty as RecipeRequest["difficulty"],
+      preparationTime: form.preparationTime,
+      ingredients: form.ingredients.map((ing) => ({
+        ...(ing.id ? { id: ing.id } : {}),
         name: ing.name,
         quantity: Number(ing.quantity),
         unit: ing.unit,
@@ -84,40 +141,48 @@ const RecipeFormDialog = ({ open, onClose, title }: RecipeFormDialogProps) => {
     };
 
     try {
-      await createMutation.mutateAsync(payload);
+      if (recipe) {
+        await updateMutation.mutateAsync({
+          recipeId: recipe.id,
+          recipe: payload,
+        });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
       onClose();
-      setName("");
-      setDescription("");
-      setPreparationTime(0);
-      setDifficulty("EASY");
-      setIngredients([defaultIngredient()]);
-    } catch (err: any) {
-      alert(err?.message || "Create failed");
+      resetForm();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An error occurred";
+      alert(message || (recipe ? "Update failed" : "Create failed"));
     }
   };
+
+  const defaultTitle = recipe ? "Edit Recipe" : "Add Recipe";
 
   return (
     <BaseDialog
       isOpen={open}
       onClose={handleClose}
-      title={title || "Add Recipe"}
+      title={title || defaultTitle}
     >
       <Box sx={{ maxWidth: 800, width: "100%" }}>
         <Typography variant="h6" gutterBottom>
-          Add Recipe
+          {recipe ? "Edit Recipe" : "Add Recipe"}
         </Typography>
         <Stack spacing={2}>
           <TextField
             label="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             fullWidth
           />
 
           <TextField
             label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={form.description}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, description: e.target.value }))
+            }
             multiline
             rows={4}
             fullWidth
@@ -127,12 +192,22 @@ const RecipeFormDialog = ({ open, onClose, title }: RecipeFormDialogProps) => {
             <TextField
               label="Preparation time (mins)"
               type="number"
-              value={preparationTime}
-              onChange={(e) => setPreparationTime(Number(e.target.value))}
+              value={form.preparationTime}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  preparationTime: Number(e.target.value),
+                }))
+              }
             />
             <Select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as any)}
+              value={form.difficulty}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  difficulty: e.target.value as RecipeDifficulty,
+                }))
+              }
             >
               {difficulties.map((d) => (
                 <MenuItem key={d} value={d}>
@@ -145,7 +220,7 @@ const RecipeFormDialog = ({ open, onClose, title }: RecipeFormDialogProps) => {
           <Box>
             <Typography variant="subtitle1">Ingredients</Typography>
             <Stack spacing={1} sx={{ mt: 1 }}>
-              {ingredients.map((ing, idx) => (
+              {form.ingredients.map((ing, idx) => (
                 <Stack
                   key={idx}
                   direction="row"
@@ -194,7 +269,7 @@ const RecipeFormDialog = ({ open, onClose, title }: RecipeFormDialogProps) => {
 
           <Stack direction="row" spacing={2}>
             <Button variant="contained" onClick={handleSubmit}>
-              Save
+              {recipe ? "Update" : "Save"}
             </Button>
             <Button onClick={handleClose}>Cancel</Button>
           </Stack>

@@ -14,7 +14,7 @@ const RecipeList = () => {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   const [invoiceSearch, setInvoiceSearch] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeResponse | null>(
     null,
@@ -39,7 +39,13 @@ const RecipeList = () => {
         <div className="w-full flex flex-col gap-y-4">
           <Box className="relative mb-6 w-full flex items-center">
             <Box className="flex items-center space-x-2">
-              <Button variant="contained" onClick={() => setCreateOpen(true)}>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  setSelectedRecipe(null);
+                  setFormOpen(true);
+                }}
+              >
                 Add Recipe
               </Button>
             </Box>
@@ -69,6 +75,10 @@ const RecipeList = () => {
                 setSelectedRecipe(r);
                 setPreviewOpen(true);
               }}
+              onEdit={(r) => {
+                setSelectedRecipe(r);
+                setFormOpen(true);
+              }}
             />
           </div>
 
@@ -92,8 +102,12 @@ const RecipeList = () => {
             />
           </div>
           <RecipeFormDialog
-            open={createOpen}
-            onClose={() => setCreateOpen(false)}
+            open={formOpen}
+            onClose={() => {
+              setFormOpen(false);
+              setSelectedRecipe(null);
+            }}
+            recipe={selectedRecipe}
           />
           <RecipePreviewDialog
             open={previewOpen}
