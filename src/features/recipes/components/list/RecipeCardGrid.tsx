@@ -9,17 +9,20 @@ import {
 } from "@mui/material";
 import EditIcon from "../../../../components/icons/EditIcon";
 import type { RecipeResponse } from "../../../../types/Recipe";
+import DeleteIcon from "../../../../components/icons/DeleteIcon";
 
 interface RecipeCardGridProps {
   recipes: RecipeResponse[];
   onPreview?: (recipe: RecipeResponse) => void;
   onEdit?: (recipe: RecipeResponse) => void;
+  onDelete?: (recipe: RecipeResponse) => void;
 }
 
 const RecipeCardGrid = ({
   recipes,
   onPreview,
   onEdit,
+  onDelete,
 }: RecipeCardGridProps) => {
   const chipColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -60,6 +63,18 @@ const RecipeCardGrid = ({
                 }}
               >
                 <EditIcon fontSize="small" />
+              </IconButton>
+            )}
+            {onDelete && (
+              <IconButton
+                size="small"
+                sx={{ position: "absolute", top: 32, right: 4, zIndex: 1 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(recipe);
+                }}
+              >
+                <DeleteIcon fontSize="small" />
               </IconButton>
             )}
             <CardContent

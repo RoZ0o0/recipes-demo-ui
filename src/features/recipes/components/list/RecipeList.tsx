@@ -7,21 +7,23 @@ import SearchInput from "../../../../components/SearchInput";
 import RecipeFormDialog from "../form/RecipeFormDialog";
 import RecipePreviewDialog from "../preview/RecipePreviewDialog";
 import type { RecipeResponse } from "../../../../types/Recipe";
+import RecipeDeleteDialog from "../delete/RecipeDeleteDialog";
 
 const RecipeList = () => {
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(6);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
-  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [recipeSearch, setRecipeSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeResponse | null>(
     null,
   );
 
   const { data, isLoading, isError, error } = useRecipes(
-    invoiceSearch,
+    recipeSearch,
     page,
     size,
     sortBy,
@@ -60,8 +62,8 @@ const RecipeList = () => {
             <Box className="ml-auto flex items-center">
               <Box className="w-64">
                 <SearchInput
-                  value={invoiceSearch}
-                  onChange={setInvoiceSearch}
+                  value={recipeSearch}
+                  onChange={setRecipeSearch}
                   placeholder="Search recipes..."
                 />
               </Box>
@@ -78,6 +80,10 @@ const RecipeList = () => {
               onEdit={(r) => {
                 setSelectedRecipe(r);
                 setFormOpen(true);
+              }}
+              onDelete={(r) => {
+                setSelectedRecipe(r);
+                setDeleteOpen(true);
               }}
             />
           </div>
@@ -112,6 +118,11 @@ const RecipeList = () => {
           <RecipePreviewDialog
             open={previewOpen}
             onClose={() => setPreviewOpen(false)}
+            recipe={selectedRecipe}
+          />
+          <RecipeDeleteDialog
+            open={deleteOpen}
+            onClose={() => setDeleteOpen(false)}
             recipe={selectedRecipe}
           />
         </div>

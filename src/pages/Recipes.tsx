@@ -1,5 +1,7 @@
+import RecipeList from "../features/recipes/components/list/RecipeList";
+
 const Recipes = () => {
-  return <h1>Recipes</h1>;
+  return <RecipeList />;
 };
 
 export default Recipes;
