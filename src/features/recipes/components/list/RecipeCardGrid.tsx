@@ -3,9 +3,10 @@ import type { RecipeResponse } from "../../../../types/Recipe";
 
 interface RecipeCardGridProps {
   recipes: RecipeResponse[];
+  onPreview?: (recipe: RecipeResponse) => void;
 }
 
-const RecipeCardGrid = ({ recipes }: RecipeCardGridProps) => {
+const RecipeCardGrid = ({ recipes, onPreview }: RecipeCardGridProps) => {
   const chipColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
       case "easy":
@@ -22,7 +23,11 @@ const RecipeCardGrid = ({ recipes }: RecipeCardGridProps) => {
   return (
     <Grid container spacing={4} justifyContent="center">
       {recipes.map((recipe: RecipeResponse) => (
-        <Grid sx={{ xs: 12, sm: 6, md: 4 }} key={recipe.id}>
+        <Grid
+          sx={{ xs: 12, sm: 6, md: 4 }}
+          key={recipe.id}
+          onClick={() => onPreview && onPreview(recipe)}
+        >
           <Card
             sx={{
               height: 240,
@@ -64,13 +69,11 @@ const RecipeCardGrid = ({ recipes }: RecipeCardGridProps) => {
                   size="small"
                   color="default"
                 />
-                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                  <Chip
-                    label={recipe.difficulty}
-                    size="small"
-                    color={chipColor(recipe.difficulty)}
-                  />
-                </Box>
+                <Chip
+                  label={recipe.difficulty}
+                  size="small"
+                  color={chipColor(recipe.difficulty)}
+                />
               </Box>
             </CardContent>
           </Card>

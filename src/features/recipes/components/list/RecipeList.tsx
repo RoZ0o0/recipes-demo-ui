@@ -4,6 +4,8 @@ import { CircularProgress, Typography, Box } from "@mui/material";
 import ListPagination from "../../../../components/ListPagination";
 import RecipeCardGrid from "./RecipeCardGrid";
 import SearchInput from "../../../../components/SearchInput";
+import RecipePreviewDialog from "../preview/RecipePreviewDialog";
+import type { RecipeResponse } from "../../../../types/Recipe";
 
 const RecipeList = () => {
   const [page, setPage] = useState(0);
@@ -11,6 +13,10 @@ const RecipeList = () => {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeResponse | null>(
+    null,
+  );
 
   const { data, isLoading, isError, error } = useRecipes(
     invoiceSearch,
@@ -49,7 +55,13 @@ const RecipeList = () => {
           </Box>
 
           <div className="grow">
-            <RecipeCardGrid recipes={data.content} />
+            <RecipeCardGrid
+              recipes={data.content}
+              onPreview={(r) => {
+                setSelectedRecipe(r);
+                setPreviewOpen(true);
+              }}
+            />
           </div>
 
           <div className="flex justify-center">
@@ -71,6 +83,11 @@ const RecipeList = () => {
               }}
             />
           </div>
+          <RecipePreviewDialog
+            open={previewOpen}
+            onClose={() => setPreviewOpen(false)}
+            recipe={selectedRecipe}
+          />
         </div>
       )}
       {isLoading && (
