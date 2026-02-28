@@ -7,13 +7,27 @@ interface BaseDialogProps {
   title?: string;
   children: ReactNode;
   actions?: ReactNode;
+  maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
+  width?: number | string;
 }
 
-const BaseDialog = ({ isOpen, onClose, title, children }: BaseDialogProps) => {
+const BaseDialog = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  maxWidth,
+  width = 600,
+}: BaseDialogProps) => {
   return (
-    <Dialog open={isOpen} onClose={onClose} disableRestoreFocus={true}>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      disableRestoreFocus={true}
+      maxWidth={maxWidth || false}
+    >
       {title && <DialogTitle sx={{ alignSelf: "center" }}>{title}</DialogTitle>}
-      <DialogContent sx={{ width: 600 }}>{children}</DialogContent>
+      <DialogContent sx={{ width }}>{children}</DialogContent>
     </Dialog>
   );
 };
