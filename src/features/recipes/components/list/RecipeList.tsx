@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useRecipes } from "../../hooks/useRecipes";
-import { CircularProgress, Typography, Box } from "@mui/material";
+import { CircularProgress, Typography, Box, Button } from "@mui/material";
 import ListPagination from "../../../../components/ListPagination";
 import RecipeCardGrid from "./RecipeCardGrid";
 import SearchInput from "../../../../components/SearchInput";
+import RecipeFormDialog from "../form/RecipeFormDialog";
 import RecipePreviewDialog from "../preview/RecipePreviewDialog";
 import type { RecipeResponse } from "../../../../types/Recipe";
 
@@ -13,6 +14,7 @@ const RecipeList = () => {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeResponse | null>(
     null,
@@ -36,6 +38,12 @@ const RecipeList = () => {
       {!isLoading && !isError && data && (
         <div className="w-full flex flex-col gap-y-4">
           <Box className="relative mb-6 w-full flex items-center">
+            <Box className="flex items-center space-x-2">
+              <Button variant="contained" onClick={() => setCreateOpen(true)}>
+                Add Recipe
+              </Button>
+            </Box>
+
             <Typography
               variant="h4"
               className="font-bold absolute left-1/2 transform -translate-x-1/2"
@@ -83,6 +91,10 @@ const RecipeList = () => {
               }}
             />
           </div>
+          <RecipeFormDialog
+            open={createOpen}
+            onClose={() => setCreateOpen(false)}
+          />
           <RecipePreviewDialog
             open={previewOpen}
             onClose={() => setPreviewOpen(false)}
