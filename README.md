@@ -1,4 +1,4 @@
-# Demo UI
+# Recipes Demo UI
 
 A React + Vite frontend project using TypeScript, MUI, Tailwind CSS, React Query, and Axios.
 
